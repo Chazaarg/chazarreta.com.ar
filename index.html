@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO & Metadata -->
+    <title>Patricio Chazarreta | Argentino</title>
+    <meta
+      name="description"
+      content="Patricio Chazarreta. Argentino. Co-founder & CTO at Cooper. Building the future of pet-tech."
+    />
+    <meta
+      name="keywords"
+      content="Patricio Chazarreta, Argentino, Cooper, CTO, Co-founder, Pet-Tech, Technology, Software Engineer, Entrepreneur"
+    />
+    <meta name="author" content="Patricio Chazarreta" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="Patricio Chazarreta | Argentino" />
+    <meta
+      property="og:description"
+      content="Patricio Chazarreta. Argentino. Building the future."
+    />
+    <meta property="og:url" content="https://patriciochazarreta.com" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Patricio Chazarreta | Argentino" />
+    <meta
+      name="twitter:description"
+      content="Patricio Chazarreta. Argentino."
+    />
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Patricio Chazarreta",
+        "nationality": "Argentine",
+        "jobTitle": "CTO & Co-founder",
+        "worksFor": {
+          "@type": "Organization",
+          "name": "Cooper"
+        },
+        "url": "https://patriciochazarreta.com",
+        "sameAs": [
+          "https://linkedin.com/in/pchazarreta",
+          "https://twitter.com/chaza_cooper"
+        ],
+        "description": "Argentino. Technology leader and entrepreneur."
+      }
+    </script>
+
+    <!-- Styles -->
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Poiret+One&display=swap");
+
+      :root {
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #111;
+        --bg-tertiary: #1a1a1a;
+        --terminal-green: #00ff41;
+        --gold-deco: #d4af37;
+        --amber: #ffbf00;
+        --text-primary: #e0e0e0;
+        --text-secondary: #888;
+        --border-color: #333;
+        --alert-red: #ff3333;
+        --shadow-glow: 0 0 10px rgba(212, 175, 55, 0.2);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Share Tech Mono", monospace;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* CRT / Scanlines Overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.15),
+          rgba(0, 0, 0, 0.15) 1px,
+          transparent 1px,
+          transparent 2px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(212, 175, 55, 0.02);
+        pointer-events: none;
+        z-index: 9998;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 90vh;
+      }
+
+      /* Header */
+      header {
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+        padding-bottom: 40px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      header::after {
+        content: "◆";
+        position: absolute;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-primary);
+        padding: 0 10px;
+        color: var(--gold-deco);
+      }
+
+      h1 {
+        font-family: "Poiret One", cursive;
+        font-size: 3.5rem;
+        color: var(--gold-deco);
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+      }
+
+      .subtitle {
+        color: var(--terminal-green);
+        font-size: 1.2rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+      }
+
+      /* Sections */
+      section {
+        margin-bottom: 60px;
+      }
+
+      h2 {
+        font-family: "Poiret One", cursive;
+        color: var(--gold-deco);
+        font-size: 1.8rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        letter-spacing: 0.1em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      h2::before {
+        content: ">>";
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1rem;
+        color: var(--terminal-green);
+      }
+
+      p {
+        margin-bottom: 15px;
+        color: var(--text-secondary);
+        max-width: 700px;
+      }
+
+      .highlight {
+        color: var(--text-primary);
+      }
+
+      /* Links */
+      .links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+      }
+
+      .link-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        padding: 20px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: block;
+      }
+
+      .link-card:hover {
+        border-color: var(--gold-deco);
+        transform: translateY(-2px);
+      }
+
+      .link-title {
+        color: var(--text-primary);
+        font-family: "Poiret One", cursive;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      .link-url {
+        color: var(--terminal-green);
+        font-size: 0.8rem;
+        display: block;
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+        .container {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Patricio Chazarreta</h1>
+        <div class="subtitle">Argentino</div>
+      </header>
+
+      <section>
+        <h2>// TRANSMISSION CHANNELS</h2>
+        <div class="links-grid">
+          <a
+            href="https://www.linkedin.com/in/pchazarreta"
+            target="_blank"
+            class="link-card"
+          >
+            <span class="link-title">LINKEDIN</span>
+            <span class="link-url">/in/pchazarreta</span>
+          </a>
+          <a
+            href="https://twitter.com/chaza_cooper"
+            target="_blank"
+            class="link-card"
+          >
+            <span class="link-title">TWITTER / X</span>
+            <span class="link-url">@chaza_cooper</span>
+          </a>
+          <a href="https://cooperpetcare.app" target="_blank" class="link-card">
+            <span class="link-title">COOPER PET CARE</span>
+            <span class="link-url">cooperpetcare.app</span>
+          </a>
+          <a href="ghost/index.html" class="link-card">
+            <span class="link-title">PROJECT: G.H.O.S.T.</span>
+            <span class="link-url">/ghost_protocol</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        &copy; 2024 Patricio Chazarreta. All Rights Reserved. <br />
+        <span style="font-size: 0.7em; color: var(--terminal-green)"
+          >meme your way to greatness</span
+        >
+      </footer>
+    </div>
+  </body>
+</html>

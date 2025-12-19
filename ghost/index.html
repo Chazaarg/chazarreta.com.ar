@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>G.H.O.S.T. • Hand Monitor Protocol</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Poiret+One&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #1a1a1a;
+        --bg-tertiary: #2a2a2a;
+        --terminal-green: #00ff41;
+        --alert-red: #ff3333;
+        --gold-deco: #d4af37;
+        --amber: #ffbf00;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #333;
+        --shadow-glow: 0 0 10px rgba(0, 255, 65, 0.3);
+        --shadow-alert: 0 0 20px rgba(255, 51, 51, 0.6);
+      }
+
+      body {
+        font-family: "Share Tech Mono", monospace;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      /* CRT Effects */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.15),
+          rgba(0, 0, 0, 0.15) 1px,
+          transparent 1px,
+          transparent 2px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      @keyframes flicker {
+        0% {
+          opacity: 0.97;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.97;
+        }
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 255, 65, 0.02);
+        pointer-events: none;
+        animation: flicker 0.15s infinite;
+        z-index: 9998;
+      }
+
+      body.alert-state::after {
+        background: rgba(255, 51, 51, 0.1);
+        animation: pulse-red 0.5s infinite;
+      }
+
+      @keyframes pulse-red {
+        0%,
+        100% {
+          background: rgba(255, 51, 51, 0.1);
+        }
+        50% {
+          background: rgba(255, 51, 51, 0.3);
+        }
+      }
+
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+        gap: 20px;
+        height: 100vh;
+        align-content: start;
+      }
+
+      @media (max-width: 1024px) {
+        .container {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+      }
+
+      /* Header */
+      header {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 20px;
+        border-bottom: 3px solid var(--gold-deco);
+        margin-bottom: 10px;
+        position: relative;
+        background: linear-gradient(
+          180deg,
+          var(--bg-secondary) 0%,
+          var(--bg-primary) 100%
+        );
+      }
+
+      header::before,
+      header::after {
+        content: "";
+        position: absolute;
+        bottom: -3px;
+        width: 60px;
+        height: 3px;
+        background: var(--terminal-green);
+      }
+      header::before {
+        left: 50%;
+        transform: translateX(-150px);
+      }
+      header::after {
+        right: 50%;
+        transform: translateX(150px);
+      }
+
+      h1 {
+        font-family: "Poiret One", cursive;
+        font-size: 2.5em;
+        color: var(--gold-deco);
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+      }
+
+      .subtitle {
+        color: var(--terminal-green);
+        letter-spacing: 0.2em;
+        margin-top: 5px;
+        font-size: 0.8em;
+      }
+
+      /* Video Feed Section */
+      .feed-section {
+        background: var(--bg-secondary);
+        border: 2px solid var(--terminal-green);
+        padding: 5px;
+        position: relative;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+      }
+
+      .feed-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: #000;
+      }
+
+      video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1); /* Mirror effect */
+      }
+
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform: scaleX(-1); /* Mirror match */
+      }
+
+      /* HUD Overlay */
+      .hud-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        border: 1px solid rgba(0, 255, 65, 0.3);
+        box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+      }
+
+      .crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--terminal-green);
+        transform: translate(-50%, -50%);
+        opacity: 0.5;
+      }
+
+      .crosshair::before,
+      .crosshair::after {
+        content: "";
+        position: absolute;
+        background: var(--terminal-green);
+      }
+      .crosshair::before {
+        top: 50%;
+        left: -10px;
+        width: 60px;
+        height: 1px;
+        transform: translateY(-50%);
+      }
+      .crosshair::after {
+        top: -10px;
+        left: 50%;
+        width: 1px;
+        height: 60px;
+        transform: translateX(-50%);
+      }
+
+      .status-indicator {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 5px 15px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--terminal-green);
+        color: var(--terminal-green);
+        font-size: 1.2em;
+        letter-spacing: 0.1em;
+      }
+
+      .status-indicator.breach {
+        border-color: var(--alert-red);
+        color: var(--alert-red);
+        animation: flash-text 0.5s infinite;
+      }
+
+      @keyframes flash-text {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      /* Sidebar / Stats */
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: 100%;
+      }
+
+      .panel {
+        background: var(--bg-secondary);
+        border: 2px solid var(--gold-deco);
+        padding: 20px;
+      }
+
+      .panel:last-child {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .panel-title {
+        font-family: "Poiret One", cursive;
+        color: var(--gold-deco);
+        font-size: 1.5em;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      }
+
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+      }
+
+      .stat-label {
+        color: var(--text-secondary);
+      }
+      .stat-value {
+        color: var(--terminal-green);
+        font-weight: bold;
+      }
+      .stat-value.red {
+        color: var(--alert-red);
+      }
+
+      .log-container {
+        flex: 1;
+        overflow-y: auto;
+        font-size: 0.8em;
+        border: 1px solid var(--border-color);
+        background: #000;
+        padding: 10px;
+        height: 100%;
+      }
+
+      .log-entry {
+        margin-bottom: 5px;
+        border-bottom: 1px solid #111;
+        padding-bottom: 2px;
+        display: flex;
+        gap: 10px;
+      }
+      .log-time {
+        color: var(--text-secondary);
+        min-width: 70px;
+      }
+      .log-msg {
+        color: var(--terminal-green);
+      }
+      .log-msg.alert {
+        color: var(--alert-red);
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        flex: 1;
+        background: linear-gradient(135deg, var(--gold-deco) 0%, #b8941f 100%);
+        border: none;
+        color: var(--bg-primary);
+        padding: 12px;
+        font-family: "Poiret One", cursive;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        clip-path: polygon(
+          10px 0,
+          100% 0,
+          100% calc(100% - 10px),
+          calc(100% - 10px) 100%,
+          0 100%,
+          0 10px
+        );
+        transition: all 0.2s;
+        min-width: 120px;
+      }
+
+      button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+      }
+
+      button.secondary {
+        background: transparent;
+        border: 1px solid var(--terminal-green);
+        color: var(--terminal-green);
+      }
+      button.secondary:hover {
+        background: rgba(0, 255, 65, 0.1);
+      }
+
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 10;
+        color: var(--terminal-green);
+      }
+
+      .loader {
+        width: 50px;
+        height: 50px;
+        border: 3px solid transparent;
+        border-top-color: var(--terminal-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .made-by {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        padding: 10px;
+        margin-top: auto;
+        color: var(--text-secondary);
+        font-size: 0.75em;
+        border-top: 1px solid var(--border-color);
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .made-by a {
+        color: var(--gold-deco);
+        text-decoration: none;
+        transition: color 0.3s;
+        font-family: "Poiret One", cursive;
+        letter-spacing: 0.1em;
+        font-weight: bold;
+      }
+
+      .made-by a:hover {
+        color: var(--terminal-green);
+        text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+      }
+
+      .slogan {
+        color: var(--terminal-green);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+
+      .source-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        border: 1px solid var(--border-color);
+        padding: 2px 6px;
+        border-radius: 3px;
+        transition: all 0.2s;
+      }
+      .source-link:hover {
+        color: var(--terminal-green);
+        border-color: var(--terminal-green);
+      }
+    </style>
+    <!-- Mediapipe -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>G.H.O.S.T. Protocol</h1>
+        <div class="subtitle">◆ HABIT INTERVENTION SURVEILLANCE ◆</div>
+      </header>
+
+      <div class="feed-section">
+        <div class="feed-container">
+          <div class="loading-overlay" id="loading-screen">
+            <div class="loader"></div>
+            <div>INITIALIZING NEURAL NETWORKS...</div>
+          </div>
+          <video id="input_video" autoplay playsinline></video>
+          <canvas id="output_canvas"></canvas>
+          <div class="hud-overlay">
+            <div class="crosshair"></div>
+            <div class="status-indicator" id="status-indicator">
+              SYSTEM IDLE
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">System Status</div>
+          <div class="stat-row">
+            <span class="stat-label">Model Confidence</span>
+            <span class="stat-value" id="confidence-val">--%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Hand Proximity</span>
+            <span class="stat-value" id="proximity-val">--</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Total Breaches</span>
+            <span class="stat-value red" id="breach-count">0</span>
+          </div>
+          <div class="controls">
+            <button id="start-btn" onclick="startSystem()">ACTIVATE</button>
+            <button id="pip-btn" class="secondary" onclick="togglePiP()">
+              POP OUT (ALWAYS ON TOP)
+            </button>
+            <button id="mute-btn" class="secondary" onclick="toggleMute()">
+              MUTE AUDIO
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Event Log</div>
+          <div class="log-container" id="log-container">
+            <!-- Logs will appear here -->
+          </div>
+        </div>
+      </div>
+
+      <div class="made-by">
+        <a href="../index.html" target="_blank">[ PATRICIO CHAZARRETA ]</a>
+        <span class="slogan">meme your way to greatness</span>
+        <a
+          href="https://github.com/Chazaarg/chazarreta.com.ar/tree/main/ghost"
+          target="_blank"
+          class="source-link"
+          >&lt; SOURCE_CODE /&gt;</a
+        >
+      </div>
+    </div>
+
+    <script>
+      const videoElement = document.getElementById("input_video");
+      const canvasElement = document.getElementById("output_canvas");
+      const canvasCtx = canvasElement.getContext("2d");
+      const statusIndicator = document.getElementById("status-indicator");
+      const loadingScreen = document.getElementById("loading-screen");
+      const breachCountElem = document.getElementById("breach-count");
+      const proximityValElem = document.getElementById("proximity-val");
+
+      let isAudioMuted = false;
+      let breachCount = 0;
+      let isSystemActive = false;
+      let lastBreachTime = 0;
+      const BREACH_COOLDOWN = 100; // 0.1s cooldown for nearly instant feedback
+
+      // Request Notification Permission
+      if ("Notification" in window) {
+        Notification.requestPermission();
+      }
+
+      // PiP State
+      window.pipWindow = null;
+
+      async function togglePiP() {
+        if (!window.documentPictureInPicture) {
+          alert(
+            "Your browser doesn't support Always-On-Top Mode (Document PiP). Try Chrome 116+."
+          );
+          return;
+        }
+
+        if (window.pipWindow) {
+          window.pipWindow.close();
+          return;
+        }
+
+        try {
+          const pip = await window.documentPictureInPicture.requestWindow({
+            width: 640,
+            height: 480,
+          });
+
+          window.pipWindow = pip;
+
+          // Copy styles
+          [...document.styleSheets].forEach((styleSheet) => {
+            try {
+              const cssRules = [...styleSheet.cssRules]
+                .map((rule) => rule.cssText)
+                .join("");
+              const style = document.createElement("style");
+              style.textContent = cssRules;
+              pip.document.head.appendChild(style);
+            } catch (e) {
+              const link = document.createElement("link");
+              link.rel = "stylesheet";
+              link.type = styleSheet.type;
+              link.media = styleSheet.media;
+              link.href = styleSheet.href;
+              pip.document.head.appendChild(link);
+            }
+          });
+
+          // Add custom alert style for PiP
+          const pipStyle = document.createElement("style");
+          pipStyle.textContent = `
+                body.alert-state {
+                    background: red !important;
+                    animation: flash-pip 0.2s infinite;
+                }
+                @keyframes flash-pip {
+                    0%, 100% { background: red; }
+                    50% { background: black; }
+                }
+                .feed-container { width: 100vw; height: 100vh; }
+            `;
+          pip.document.head.appendChild(pipStyle);
+
+          // Move container
+          const container = document.querySelector(".feed-container");
+          pip.document.body.append(container);
+
+          pip.document.body.style.margin = "0";
+          pip.document.body.style.background = "#000";
+
+          // Handle close
+          pip.addEventListener("pagehide", (event) => {
+            const mainContainer = document.querySelector(".feed-section");
+            mainContainer.append(container);
+            window.pipWindow = null;
+            document.getElementById("pip-btn").textContent =
+              "POP OUT (ALWAYS ON TOP)";
+          });
+
+          document.getElementById("pip-btn").textContent = "RESTORE WINDOW";
+        } catch (err) {
+          console.error("PiP Error:", err);
+          alert("Failed to enter PiP mode: " + err.message);
+        }
+      }
+
+      // Audio Context for beeping
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      function playAlarm() {
+        if (isAudioMuted) return;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = "sawtooth";
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+        oscillator.frequency.exponentialRampToValueAtTime(
+          110,
+          audioCtx.currentTime + 0.5
+        );
+
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioCtx.currentTime + 0.5
+        );
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.5);
+      }
+
+      function toggleMute() {
+        isAudioMuted = !isAudioMuted;
+        const btn = document.getElementById("mute-btn");
+        btn.textContent = isAudioMuted ? "UNMUTE AUDIO" : "MUTE AUDIO";
+        logEvent(
+          isAudioMuted ? "Audio Output Disabled" : "Audio Output Enabled"
+        );
+      }
+
+      function logEvent(msg, isAlert = false) {
+        const container = document.getElementById("log-container");
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        const time = new Date().toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${
+          isAlert ? "alert" : ""
+        }">${msg}</span>`;
+        container.prepend(entry);
+      }
+
+      // Initialize Holistic
+      const holistic = new Holistic({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
+        },
+      });
+
+      holistic.setOptions({
+        modelComplexity: 1, // Back to Full for better accuracy
+        smoothLandmarks: true, // Smoother tracking
+        enableSegmentation: false,
+        smoothSegmentation: false,
+        refineFaceLandmarks: false,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
+
+      holistic.onResults(onResults);
+
+      // Camera setup
+      const camera = new Camera(videoElement, {
+        onFrame: async () => {
+          if (isSystemActive) await holistic.send({ image: videoElement });
+        },
+        width: 1280,
+        height: 720,
+      });
+
+      function startSystem() {
+        if (isSystemActive) return;
+        isSystemActive = true;
+        document.getElementById("start-btn").textContent = "SYSTEM ACTIVE";
+        document.getElementById("start-btn").disabled = true;
+        logEvent("Initializing Camera Feed...");
+
+        camera
+          .start()
+          .then(() => {
+            loadingScreen.style.display = "none";
+            logEvent("System Online. Monitoring Started.");
+            statusIndicator.textContent = "MONITORING ACTIVE";
+          })
+          .catch((err) => {
+            logEvent("Camera Error: " + err.message, true);
+            loadingScreen.innerHTML = `<div style="color:red">CAMERA ACCESS DENIED</div>`;
+          });
+      }
+
+      function onResults(results) {
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+        // Draw Hands (Bold)
+        canvasCtx.globalAlpha = 1;
+        drawConnectors(canvasCtx, results.leftHandLandmarks, HAND_CONNECTIONS, {
+          color: "#d4af37",
+          lineWidth: 2,
+        });
+        drawLandmarks(canvasCtx, results.leftHandLandmarks, {
+          color: "#d4af37",
+          lineWidth: 1,
+          radius: 3,
+        });
+
+        drawConnectors(
+          canvasCtx,
+          results.rightHandLandmarks,
+          HAND_CONNECTIONS,
+          { color: "#d4af37", lineWidth: 2 }
+        );
+        drawLandmarks(canvasCtx, results.rightHandLandmarks, {
+          color: "#d4af37",
+          lineWidth: 1,
+          radius: 3,
+        });
+
+        checkBiting(results);
+
+        canvasCtx.restore();
+      }
+
+      function checkBiting(results) {
+        if (!results.faceLandmarks) return;
+
+        // Mouth landmarks (approximate indices for lips)
+        // 13, 14, 15, 16, 17, ...
+        // Let's use 13 (upper lip) and 14 (lower lip) average as center.
+
+        const mouthTop = results.faceLandmarks[13];
+        const mouthBottom = results.faceLandmarks[14];
+
+        if (!mouthTop || !mouthBottom) return;
+
+        const mouthX = (mouthTop.x + mouthBottom.x) / 2;
+        const mouthY = (mouthTop.y + mouthBottom.y) / 2;
+
+        // Check hands
+        const hands = [];
+        if (results.leftHandLandmarks) hands.push(results.leftHandLandmarks);
+        if (results.rightHandLandmarks) hands.push(results.rightHandLandmarks);
+
+        let minDistance = 1.0; // Normalized 0-1
+        let isBiting = false;
+
+        // Keypoints to check: Fingertips (4, 8, 12, 16, 20) and Wrist (0)
+        const checkPoints = [0, 4, 8, 12, 16, 20];
+
+        for (const hand of hands) {
+          for (const idx of checkPoints) {
+            const point = hand[idx];
+            const dist = Math.sqrt(
+              Math.pow(point.x - mouthX, 2) + Math.pow(point.y - mouthY, 2)
+            );
+            if (dist < minDistance) minDistance = dist;
+          }
+        }
+
+        // Update UI
+        proximityValElem.textContent = minDistance.toFixed(3);
+
+        const THRESHOLD = 0.035; // Reduced for stricter detection
+
+        if (minDistance < THRESHOLD) {
+          isBiting = true;
+        }
+
+        if (isBiting) {
+          triggerBreach();
+
+          // Draw warning line
+          canvasCtx.beginPath();
+          canvasCtx.arc(
+            mouthX * canvasElement.width,
+            mouthY * canvasElement.height,
+            50,
+            0,
+            2 * Math.PI
+          );
+          canvasCtx.strokeStyle = "red";
+          canvasCtx.lineWidth = 5;
+          canvasCtx.stroke();
+        } else {
+          clearBreach();
+        }
+      }
+
+      function triggerBreach() {
+        const now = Date.now();
+
+        statusIndicator.textContent = "BREACH DETECTED";
+        statusIndicator.classList.add("breach");
+        document.body.classList.add("alert-state");
+
+        // PiP Visual Alarm
+        if (window.pipWindow) {
+          window.pipWindow.document.body.classList.add("alert-state");
+        }
+
+        // NUCLEAR OPTION: ALERT LOOP
+        if (now - lastBreachTime > BREACH_COOLDOWN) {
+          setTimeout(() => {
+            alert(
+              "⚠️ SYSTEM BREACH DETECTED ⚠️\n\nHANDS AWAY FROM MOUTH!\n\n(Click OK to resume)"
+            );
+          }, 10);
+        }
+
+        if (now - lastBreachTime > BREACH_COOLDOWN) {
+          breachCount++;
+          breachCountElem.textContent = breachCount;
+          logEvent("HAND DETECTED NEAR MOUTH - INTERVENTION REQUIRED", true);
+          playAlarm();
+
+          // System Notification
+          if (document.visibilityState === "hidden" || window.pipWindow) {
+            if (Notification.permission === "granted") {
+              new Notification("G.H.O.S.T. PROTOCOL", {
+                body: "HAND DETECTED! INTERVENTION REQUIRED.",
+                icon: "https://img.icons8.com/color/48/000000/skull.png",
+              });
+            }
+          }
+
+          lastBreachTime = now;
+        }
+      }
+
+      function clearBreach() {
+        if (Date.now() - lastBreachTime > 500) {
+          statusIndicator.textContent = "MONITORING ACTIVE";
+          statusIndicator.classList.remove("breach");
+          document.body.classList.remove("alert-state");
+
+          if (window.pipWindow) {
+            window.pipWindow.document.body.classList.remove("alert-state");
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
